@@ -11,7 +11,7 @@ def create_multizone_grid():
 
     # Initialize session state for Goodix processing - DEFAULT TO TRUE
     if "goodix_processing" not in st.session_state:
-        st.session_state.goodix_processing = True
+        st.session_state.goodix_processing = False
 
     # Initialize session state for Background noise - DEFAULT TO FALSE
     if "background_noise" not in st.session_state:

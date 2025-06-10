@@ -5,10 +5,14 @@ import threading
 import subprocess
 from typing import Dict, List, Optional
 import streamlit as st
+import os
+
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+PATH_TO_SKETCH_DIR = os.path.join(CURRENT_DIR, "..", "arduino_gpio")
 
 
 class GPIOHandler:
-    def __init__(self, port: str = None, baudrate: int = 9600):
+    def __init__(self, port: str = None, baudrate: int = 115200):
         """Initialize GPIO handler for Arduino communication."""
         if not port:
             self.port = self._get_connected_arduino_port()
@@ -37,6 +41,41 @@ class GPIOHandler:
     def connect(self) -> bool:
         """Connect to Arduino via Serial."""
         try:
+            # First, compile and upload the sketch before opening serial connection
+            print(f"Compiling Arduino sketch at: {PATH_TO_SKETCH_DIR}")
+            compile_result = subprocess.run(
+                ["arduino-cli", "compile", "--fqbn", "arduino:avr:uno", "."],
+                cwd=PATH_TO_SKETCH_DIR,
+                capture_output=True,
+                text=True,
+            )
+            if compile_result.returncode != 0:
+                st.error(f"Arduino compile failed: {compile_result.stderr}")
+                return False
+
+            print(f"Uploading to port: {self.port}")
+            upload_result = subprocess.run(
+                [
+                    "arduino-cli",
+                    "upload",
+                    "-p",
+                    self.port,
+                    "--fqbn",
+                    "arduino:avr:uno",
+                    ".",
+                ],
+                cwd=PATH_TO_SKETCH_DIR,
+                capture_output=True,
+                text=True,
+            )
+            if upload_result.returncode != 0:
+                st.error(f"Arduino upload failed: {upload_result.stderr}")
+                return False
+
+            # Wait for Arduino to reset after upload
+            time.sleep(3)
+
+            # Now open the serial connection
             self.serial_conn = serial.Serial(self.port, self.baudrate, timeout=1)
             time.sleep(2)  # Wait for Arduino to initialize
 
@@ -44,30 +83,11 @@ class GPIOHandler:
             if self.serial_conn.in_waiting:
                 self.serial_conn.reset_input_buffer()
 
-            # Compile and run the Arduino sketch if needed
-            subprocess.run(
-                ["arduino-cli", "compile", "--fqbn", "arduino:avr:uno", "."],
-                cwd="/path/to/sketch",
-            )
-
-            subprocess.run(
-                [
-                    "arduino-cli",
-                    "upload",
-                    "-p",
-                    "/dev/ttyACM0",
-                    "--fqbn",
-                    "arduino:avr:uno",
-                    ".",
-                ],
-                cwd="/path/to/sketch",
-            )
-
             # Send a reset command to clear any running sketch process
             try:
                 self.serial_conn.write("RESET\n".encode("utf-8"))
                 response = self.serial_conn.readline().decode("utf-8").strip()
-                if "RESET_OK" not in response:  # Check if Arduino acknowledges reset
+                if "RESET_OK" not in response:
                     print(f"Arduino reset response: {response}")
                 time.sleep(0.5)  # Wait for the reset to take effect
             except Exception as e:
@@ -105,6 +125,7 @@ class GPIOHandler:
                 if self.serial_conn and self.serial_conn.in_waiting > 0:
                     line = self.serial_conn.readline().decode("utf-8").strip()
                     self._parse_arduino_data(line)
+                    # print(f"Received from Arduino: {line}")
                 time.sleep(0.1)  # Small delay to prevent excessive CPU usage
             except Exception as e:
                 print(f"Error reading from Arduino: {e}")
