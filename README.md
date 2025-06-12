@@ -1,12 +1,13 @@
 # MultiZone GUI Application
 
-A Streamlit application featuring a multi-zone interactive grid with Arduino GPIO integration.
+A Streamlit application featuring a multi-zone interactive grid with Arduino GPIO integration and audio cue handling via REAPER.
 
 ## 🎯 Features
 
 - 4-zone interactive grid (Driver, Codriver, Rear Left, Rear Right)
 - Real-time talker status monitoring
 - Arduino GPIO integration via serial communication
+- Audio cue handling via REAPER integration
 - Goodix processing control
 - Background noise control
 - Artificial signal simulation when Arduino not connected
@@ -29,10 +30,38 @@ Try the live demo: [MultiZone App](https://multizone-app-tproost.streamlit.app)
    pip install -r requirements.txt
    ```
 
-3. Run the app:
+3. **Audio Setup (Required for full functionality):**
+   - Install REAPER DAW
+   - Open a REAPER project file before running the GUI application (see example.rpp)
+   - Ensure REAPER track names include the following channel types:
+     - **BGN** - Background Noise tracks
+     - **NE** - Near End tracks
+     - **FE** - Far End tracks
+
+4. Run the app:
    ```bash
    streamlit run app.py
    ```
+
+## 🎵 Audio Cue Handler
+
+The application integrates with REAPER for audio cue management:
+
+### REAPER Setup Requirements
+- REAPER must be running with the project loaded **before** starting the GUI application
+- Track naming convention is critical for proper channel identification
+- Supported channel content types in track names (mute toggle per type):
+  - `BGN` - Background noise channels
+  - `NE` - Near end audio channels
+  - `FE` - Far end audio channels
+
+### Example Track Names
+```
+BGN_some_noise
+NE_codriver_01
+NE_driver
+FE_RearLeft_Main
+```
 
 ## 🔧 Arduino Setup
 
@@ -49,23 +78,6 @@ choco install arduino-cli
 # https://github.com/arduino/arduino-cli/releases
 ```
 
-**macOS:**
-```bash
-# Using Homebrew
-brew install arduino-cli
-
-# Or using curl
-curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh | sh
-```
-
-**Linux:**
-```bash
-# Using curl
-curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh | sh
-
-# Or download binary from GitHub releases
-```
-
 **Setup Arduino CLI:**
 ```bash
 # Initialize configuration
@@ -74,7 +86,7 @@ arduino-cli core update-index
 # Install Arduino AVR core (for Uno/Nano)
 arduino-cli core install arduino:avr
 
-# List connected boards
+# Check: list connected boards
 arduino-cli board list
 ```
 
@@ -91,10 +103,11 @@ arduino-cli board list
 
 ## 📱 Usage
 
-1. **Zone Selection:** Click any zone button to activate audio processing
-2. **Talker Monitoring:** Green dots indicate active talkers (when Goodix processing is ON)
-3. **Arduino Connection:** Connect via USB for real GPIO monitoring
-4. **Artificial Mode:** When Arduino disconnected, shows simulated talker activity
+1. **Audio Setup:** Ensure REAPER is running with proper track naming before starting the application
+2. **Zone Selection:** Click any zone button to activate audio processing
+3. **Talker Monitoring:** Green dots indicate active talkers (when Goodix processing is ON)
+4. **Arduino Connection:** Connect to Arduino via USB for real GPIO monitoring
+5. **Artificial Mode:** When Arduino disconnected, shows simulated talker activity
 
 ## 🌐 Deployment
 
@@ -105,8 +118,6 @@ arduino-cli board list
 
 ### Other Platforms
 - **Railway:** `railway up`
-- **Render:** Deploy as web service
-- **Heroku:** Use provided `Dockerfile`
 
 ## 🤝 Contributing
 
@@ -128,6 +139,5 @@ Found a bug? Please [open an issue](https://github.com/YOUR_USERNAME/multizone-a
 - Screenshots if applicable
 
 ## 🔍 Known improvement points
-- Make Arduino COM port configurable
 - Make Arduino GPIO pins configurable
 

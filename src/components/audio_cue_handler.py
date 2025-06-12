@@ -1,5 +1,6 @@
 import reapy_boost as rpr
 import os
+import time
 
 
 class AudioCueHandler:
@@ -82,6 +83,7 @@ class AudioCueHandler:
         # Enable loop mode
         self.project.cursor_position = time_selection.start
         time_selection.loop()
+        print(f"✓ NE loop set from 0 to {loop_end_time} seconds.")
 
     def start_playback(self):
         """Start playback of the current project."""
@@ -129,21 +131,17 @@ def main():
     audio_handler = AudioCueHandler()
 
     # Example 2: Start playback
-    print("2. Starting audio playback...")
+    print("2. Set loop and start playback...")
+    audio_handler.set_ne_loop()
     audio_handler.start_playback()
 
-    # Example 3: Mute specific channels
-    print("3. Muting channels...")
-    channels = ["Driver", "Codriver", "Rear Left", "Rear Right"]
-    for channel in channels:
-        audio_handler.mute_channel(channel)
-    print()
+    # Example 4: Unmute content type
+    audio_handler.toggle_content_mute("NE")
 
-    # Example 4: Unmute specific channels
-    print("4. Unmuting channels...")
-    for channel in channels[:2]:  # Only unmute first two channels
-        audio_handler.unmute_channel(channel)
-    print()
+    # Example 3: Wait for 4 seconds while audio plays
+    print("3. Waiting for 4 seconds...")
+    time.sleep(4)
+    print("4. Done waiting.")
 
     # Example 5: Stop playback
     print("5. Stopping audio playback...")
