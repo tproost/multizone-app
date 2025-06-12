@@ -2,8 +2,8 @@
 // Handles talker status monitoring and processing control
 
 // Pin definitions
-const int TALKER_PINS[] = {2, 3, 4, 5}; // Digital pins for talker inputs
-const int PROCESSING_LED_PIN = 13;      // Built-in LED for processing status
+const int TALKER_PINS[] = {2, 3, 4, 5}; // Digital pins for reading talker VAD status
+const int PROCESSING_LED_PIN = 13;      // Built-in LED for processing on/off toggle
 const int NUM_ZONES = 4;
 
 // State variables
