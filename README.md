@@ -14,9 +14,6 @@ A Streamlit application featuring a multi-zone interactive grid with Arduino GPI
 
 ## 🚀 Quick Start
 
-### Online Demo
-Try the live demo: [MultiZone App](https://multizone-app-tproost.streamlit.app)
-
 ### Local Installation
 
 1. Clone this repository:
