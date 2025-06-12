@@ -1,5 +1,6 @@
 import streamlit as st
 from .gpio_handler import get_gpio_handler
+from .audio_cue_handler import get_audio_cue_handler
 import time
 import random
 
@@ -17,9 +18,25 @@ def create_multizone_grid():
     if "background_noise" not in st.session_state:
         st.session_state.background_noise = False
 
+    # Initialize session state for Background noise - DEFAULT TO FALSE
+    if "fe" not in st.session_state:
+        st.session_state.fe = False
+
+    # Initialize session state for NE talker - DEFAULT TO FALSE
+    if "ne_talker" not in st.session_state:
+        st.session_state.ne_talker = False
+
+    # Initialize session state for Audio playback - DEFAULT TO FALSE
+    if "audio_playback" not in st.session_state:
+        st.session_state.audio_playback = False
+
     # Initialize GPIO connection state
     if "gpio_connected" not in st.session_state:
         st.session_state.gpio_connected = False
+
+    # Initialize Reaper connection state
+    if "audio_connected" not in st.session_state:
+        st.session_state.audio_connected = False
 
     # Initialize artificial talker signals when Arduino is not connected
     if "artificial_talker_status" not in st.session_state:
@@ -30,6 +47,13 @@ def create_multizone_grid():
 
     # Get GPIO handler
     gpio_handler = get_gpio_handler()
+    # Get Audio Cue handler
+    try:
+        audio_handler = get_audio_cue_handler()
+        st.session_state.audio_connected = True
+    except Exception as e:
+        st.session_state.audio_connected = False
+        st.info("Audio connection not established, error: " + str(e))
 
     # Generate artificial talker signals if not connected to Arduino
     if not st.session_state.gpio_connected:
@@ -157,7 +181,7 @@ def create_multizone_grid():
     st.markdown("---")
 
     # Control buttons side by side
-    col1, col2 = st.columns(2)
+    col1, col2, col3, col4 = st.columns(4)
 
     # Goodix processing button
     with col1:
@@ -191,8 +215,31 @@ def create_multizone_grid():
 
             st.rerun()
 
-    # Background noise button
+    # Music button (FE) button
     with col2:
+        noise_status = "ON" if st.session_state.fe else "OFF"
+        noise_button_type = "primary" if st.session_state.fe else "secondary"
+
+        if st.button(f"Music {noise_status}", key="fe_btn", type=noise_button_type):
+            new_fe_status = not st.session_state.fe
+            st.session_state.fe = new_fe_status
+
+            # Send background noise command to Reaper if connected
+            if st.session_state.audio_connected:
+                audio_handler.toggle_content_mute("FE")
+                st.success(
+                    f"Music {'enabled' if new_fe_status else 'disabled'} on Reaper"
+                )
+            else:
+                # Show artificial feedback when not connected
+                st.info(
+                    f"Artificial mode: Music {'enabled' if new_fe_status else 'disabled'}"
+                )
+
+            st.rerun()
+
+    # Background noise button
+    with col3:
         noise_status = "ON" if st.session_state.background_noise else "OFF"
         noise_button_type = (
             "primary" if st.session_state.background_noise else "secondary"
@@ -204,11 +251,11 @@ def create_multizone_grid():
             new_noise_status = not st.session_state.background_noise
             st.session_state.background_noise = new_noise_status
 
-            # Send background noise command to Arduino if connected
-            if st.session_state.gpio_connected:
-                # You can extend the GPIO handler to send noise commands
+            # Send background noise command to Reaper if connected
+            if st.session_state.audio_connected:
+                audio_handler.toggle_content_mute("BGN")
                 st.success(
-                    f"Background noise {'enabled' if new_noise_status else 'disabled'} on Arduino"
+                    f"Background noise {'enabled' if new_noise_status else 'disabled'} on Reaper"
                 )
             else:
                 # Show artificial feedback when not connected
@@ -218,10 +265,35 @@ def create_multizone_grid():
 
             st.rerun()
 
-    # Arduino Connection Section - moved to bottom and made smaller
+        # NE talker button
+        with col4:
+            ne_status = "ON" if st.session_state.ne_talker else "OFF"
+            ne_button_type = "primary" if st.session_state.ne_talker else "secondary"
+
+            if st.button(f"Talkers {ne_status}", key="ne_btn", type=ne_button_type):
+                new_ne_status = not st.session_state.ne_talker
+                st.session_state.ne_talker = new_ne_status
+
+                # Send NE talker command to Reaper if connected
+                if st.session_state.audio_connected:
+                    audio_handler.toggle_content_mute("NE")
+                    st.success(
+                        f"NE talker {'enabled' if new_ne_status else 'disabled'} on Reaper"
+                    )
+                else:
+                    # Show artificial feedback when not connected
+                    st.info(
+                        f"Artificial mode: NE talker {'enabled' if new_ne_status else 'disabled'}"
+                    )
+
+                st.rerun()
+
+    # Arduino Connection and Audio Playback Section - moved to bottom and made smaller
     st.markdown("---")
     col1, col2, col3, col4, col5 = st.columns([1, 1, 1, 1, 1])
-    with col3:  # Center column
+
+    # Arduino connection in center-left
+    with col2:
         if not st.session_state.gpio_connected:
             if st.button(
                 "Connect Arduino", key="connect_gpio", help="Connect to Arduino via USB"
@@ -245,6 +317,60 @@ def create_multizone_grid():
                 st.info("Disconnected")
                 st.rerun()
 
+    # Audio playback button in center-right
+    with col4:
+        if not st.session_state.audio_connected:
+            if st.button(
+                "Connect Audio",
+                key="connect_audio",
+                help="Connect to Reaper for audio playback",
+            ):
+                try:
+                    audio_handler = get_audio_cue_handler()
+                    st.session_state.audio_connected = True
+                    st.success("Connected!")
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"Failed to connect: {e}")
+        else:
+            # Show audio status when connected
+            if not st.session_state.audio_playback:
+                # Show connection status and play button
+                status_color = "🟢" if st.session_state.audio_connected else "🔴"
+                st.markdown(
+                    f"<div style='text-align: center; font-size: 12px;'>{status_color} Audio connected</div>",
+                    unsafe_allow_html=True,
+                )
+
+                if st.button(
+                    "Start Audio", key="start_audio", help="Start audio playback"
+                ):
+                    try:
+                        audio_handler.set_ne_loop()
+                        audio_handler.start_playback()
+                        st.session_state.audio_playback = True
+                        st.success("Audio started!")
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Failed to start audio: {e}")
+            else:
+                # Show playing status and stop button
+                st.markdown(
+                    f"<div style='text-align: center; font-size: 12px;'>🎵 Playing</div>",
+                    unsafe_allow_html=True,
+                )
+
+                if st.button(
+                    "Stop Audio", key="stop_audio", help="Stop audio playback"
+                ):
+                    try:
+                        audio_handler.stop_playback()
+                        st.session_state.audio_playback = False
+                        st.success("Audio stopped!")
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Failed to stop audio: {e}")
+
     # Status indicator at the bottom
     status_messages = []
 
@@ -255,6 +381,9 @@ def create_multizone_grid():
 
     if st.session_state.background_noise:
         status_messages.append("🔊 Background noise enabled")
+
+    if st.session_state.audio_playback:
+        status_messages.append("🎵 Audio playback active")
 
     if status_messages:
         st.markdown(
