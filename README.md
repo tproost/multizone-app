@@ -9,7 +9,7 @@ A Streamlit application featuring a multi-zone interactive grid with Arduino GPI
 - Arduino GPIO integration via serial communication
 - Audio cue handling via REAPER integration
 - Goodix processing control
-- Background noise control
+- Background noise, music and talker control
 - Artificial signal simulation when Arduino not connected
 
 ## 🚀 Quick Start
@@ -46,7 +46,7 @@ The application integrates with REAPER for audio cue management:
 
 ### REAPER Setup Requirements
 - REAPER must be running with the project loaded **before** starting the GUI application
-- Track naming convention is critical for proper channel identification
+- Track naming convention is critical for proper channel identification, must contain strings mentioned below.
 - Supported channel content types in track names (mute toggle per type):
   - `BGN` - Background noise channels
   - `NE` - Near end audio channels
@@ -101,7 +101,7 @@ arduino-cli board list
 ## 📱 Usage
 
 1. **Audio Setup:** Ensure REAPER is running with proper track naming before starting the application
-2. **Zone Selection:** Click any zone button to activate audio processing
+2. **Zone Selection:** Click any zone button to listen to this zone.
 3. **Talker Monitoring:** Green dots indicate active talkers (when Goodix processing is ON)
 4. **Arduino Connection:** Connect to Arduino via USB for real GPIO monitoring
 5. **Artificial Mode:** When Arduino disconnected, shows simulated talker activity
@@ -137,4 +137,5 @@ Found a bug? Please [open an issue](https://github.com/YOUR_USERNAME/multizone-a
 
 ## 🔍 Known improvement points
 - Make Arduino GPIO pins configurable
-
+- Make setting up more reliable
+- Handle lost connections better

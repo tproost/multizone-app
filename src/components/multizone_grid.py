@@ -227,9 +227,7 @@ def create_multizone_grid():
             # Send background noise command to Reaper if connected
             if st.session_state.audio_connected:
                 audio_handler.toggle_content_mute("FE")
-                st.success(
-                    f"Music {'enabled' if new_fe_status else 'disabled'} on Reaper"
-                )
+                st.success(f"Music {'enabled' if new_fe_status else 'disabled'}")
             else:
                 # Show artificial feedback when not connected
                 st.info(
@@ -255,7 +253,7 @@ def create_multizone_grid():
             if st.session_state.audio_connected:
                 audio_handler.toggle_content_mute("BGN")
                 st.success(
-                    f"Background noise {'enabled' if new_noise_status else 'disabled'} on Reaper"
+                    f"Background noise {'enabled' if new_noise_status else 'disabled'}"
                 )
             else:
                 # Show artificial feedback when not connected
@@ -278,7 +276,7 @@ def create_multizone_grid():
                 if st.session_state.audio_connected:
                     audio_handler.toggle_content_mute("NE")
                     st.success(
-                        f"NE talker {'enabled' if new_ne_status else 'disabled'} on Reaper"
+                        f"NE talker {'enabled' if new_ne_status else 'disabled'}"
                     )
                 else:
                     # Show artificial feedback when not connected
